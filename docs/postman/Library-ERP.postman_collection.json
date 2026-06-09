@@ -1,0 +1,1729 @@
+{
+  "info": {
+    "name": "Library ERP - Auth, Libraries, Students & Users",
+    "_postman_id": "f3a1b8b4-6f4f-4d22-9a3a-library-erp-auth",
+    "description": "Postman collection for the Library ERP backend — Auth, RBAC, Libraries, Branches, Students, Seats, Attendance, Payments, Analytics, Reports, and Users.\n\nUsage:\n1. Import the matching environment `Library-ERP.postman_environment.json`.\n2. Set `baseUrl` (default: http://localhost:5000/api/v1).\n3. Run **Login** first; scripts populate `accessToken` / `refreshToken`.\n4. Library flows populate `libraryId` and `branchId` when applicable.\n5. Payment flows can persist `feePlanId`, `invoiceId`, and `paymentId` from create/collect responses.\n6. Authenticated requests use `Authorization: Bearer {{accessToken}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "API Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Analytics — Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/overview?range=30d&libraryId={{libraryId}}&branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "overview"],
+              "query": [
+                { "key": "range", "value": "30d" },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            },
+            "description": "Requires `analytics.view` or `report.view`. Optional `libraryId`/`branchId` for SUPER_ADMIN scoping."
+          }
+        },
+        {
+          "name": "Analytics — Trends Daily",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/trends/daily?range=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "trends", "daily"],
+              "query": [{ "key": "range", "value": "30d" }]
+            },
+            "description": "Requires `analytics.view` or `report.view` and `payment.read`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activity & Search",
+      "item": [
+        {
+          "name": "Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activity/recent?page=1&limit=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["activity", "recent"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "15" }
+              ]
+            },
+            "description": "Tenant-scoped activity feed from audit logs. Alias: GET /dashboard/recent-activity"
+          }
+        },
+        {
+          "name": "Global Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=student&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                { "key": "q", "value": "student" },
+                { "key": "limit", "value": "12" }
+              ]
+            },
+            "description": "Role-aware global search (libraries, students, seats, invoices, etc.)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Reports — Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/students?range=30d&page=1&limit=20&libraryId={{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "students"],
+              "query": [
+                { "key": "range", "value": "30d" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            },
+            "description": "Requires `report.view` or `analytics.view` and `student.read`. SUPER_ADMIN must pass `libraryId`."
+          }
+        },
+        {
+          "name": "Reports — Payments export CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/payments/export?range=30d&format=csv&libraryId={{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "payments", "export"],
+              "query": [
+                { "key": "range", "value": "30d" },
+                { "key": "format", "value": "csv" },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true }
+              ]
+            },
+            "description": "Binary CSV download. Requires `payment.read`."
+          }
+        },
+        {
+          "name": "Reports — Collections daily",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/collections/daily?range=30d&libraryId={{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "collections", "daily"],
+              "query": [
+                { "key": "range", "value": "30d" },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true }
+              ]
+            },
+            "description": "Aggregated payment totals by UTC day."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "if (res?.data?.tokens) {",
+                  "  pm.environment.set('accessToken', res.data.tokens.accessToken);",
+                  "  pm.environment.set('refreshToken', res.data.tokens.refreshToken);",
+                  "}",
+                  "if (res?.data?.user) {",
+                  "  pm.environment.set('userId', res.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rohit@example.com\",\n  \"password\": \"Secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rohit@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Always returns a generic success message. In development without SMTP, check server logs for the reset URL."
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"NewSecret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "if (res?.data?.tokens) {",
+                  "  pm.environment.set('accessToken', res.data.tokens.accessToken);",
+                  "  pm.environment.set('refreshToken', res.data.tokens.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Rotates refresh token. New access + refresh tokens are returned and saved to env."
+          }
+        },
+        {
+          "name": "Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('Returns user', () => pm.expect(res.data.user).to.have.property('email'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout (current device)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"allDevices\": false }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('accessToken');",
+                  "pm.environment.unset('refreshToken');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout (all devices)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"allDevices\": true }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Library & Branch",
+      "item": [
+        {
+          "name": "List Libraries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Requires `library.read`. SUPER_ADMIN sees all tenants; LIBRARY_OWNER is scoped to their library."
+          }
+        },
+        {
+          "name": "Create Library",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.library?._id) { pm.environment.set('libraryId', res.data.library._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Library {{$timestamp}}\",\n  \"email\": \"demo+{{$timestamp}}@example.com\",\n  \"subscriptionPlan\": \"FREE\",\n  \"status\": \"TRIAL\",\n  \"settings\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/libraries",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries"]
+            },
+            "description": "Requires `library.create` (platform super admin)."
+          }
+        },
+        {
+          "name": "Get Library",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Patch Library",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+91 9876543210\",\n  \"city\": \"Bengaluru\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}"]
+            },
+            "description": "Requires `library.update`."
+          }
+        },
+        {
+          "name": "Patch Library Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"theme\": \"dark\",\n    \"notifications\": { \"email\": true }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "settings"]
+            }
+          }
+        },
+        {
+          "name": "List Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/branches?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "branches"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Branch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.branch?._id) { pm.environment.set('branchId', res.data.branch._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchName\": \"Main Campus\",\n  \"branchCode\": \"MAIN-{{$timestamp}}\",\n  \"email\": \"main+{{$timestamp}}@example.com\",\n  \"totalSeats\": 120,\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/branches",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "branches"]
+            },
+            "description": "Requires `branch.create` (owner / super admin)."
+          }
+        },
+        {
+          "name": "Get Branch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/branches/{{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "branches", "{{branchId}}"]
+            }
+          }
+        },
+        {
+          "name": "Patch Branch",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalSeats\": 150,\n  \"city\": \"Bengaluru\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/branches/{{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "branches", "{{branchId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}/branches/{{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}", "branches", "{{branchId}}"]
+            },
+            "description": "Requires `branch.delete` (owner / super admin)."
+          }
+        },
+        {
+          "name": "Delete Library",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries/{{libraryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries", "{{libraryId}}"]
+            },
+            "description": "Requires `library.delete` and zero branches remaining."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Requires `student.read` or `student.read.basic` (limited fields for basic)."
+          }
+        },
+        {
+          "name": "Create Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.student?._id) { pm.environment.set('studentId', res.data.student._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"fullName\": \"Student {{$timestamp}}\",\n  \"email\": \"student+{{$timestamp}}@example.com\",\n  \"phone\": \"+91 9876543210\",\n  \"gender\": \"MALE\",\n  \"status\": \"ACTIVE\",\n  \"createLoginAccount\": true,\n  \"temporaryPassword\": \"Temp@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"]
+            },
+            "description": "Requires `student.create`. Uses `branchId` from environment."
+          }
+        },
+        {
+          "name": "Get Student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Student Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Bengaluru\",\n  \"notes\": \"Prefers morning slot.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Transfer Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}", "transfer"]
+            },
+            "description": "Requires `student.transfer`. Target branch must be in the same library."
+          }
+        },
+        {
+          "name": "Assign Seat",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedSeatId\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}/seat",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}", "seat"]
+            },
+            "description": "Requires `student.assignSeat`."
+          }
+        },
+        {
+          "name": "My Student Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "me"]
+            },
+            "description": "STUDENT self profile endpoint."
+          }
+        },
+        {
+          "name": "My Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/me/attendance?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "me", "attendance"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "STUDENT own attendance list."
+          }
+        },
+        {
+          "name": "My Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/me/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "me", "payments"]
+            },
+            "description": "STUDENT wallet: `GET /students/me/payments` returns outstanding totals plus `invoices` and `payments` for the linked student."
+          }
+        },
+        {
+          "name": "My Seat",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/me/seat",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "me", "seat"]
+            },
+            "description": "STUDENT own seat details."
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", "{{studentId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Fee Plans — List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/fee-plans?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "fee-plans"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true },
+                { "key": "active", "value": "true", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "`feePlan.read`, `payment.read`, or `payment.create`."
+          }
+        },
+        {
+          "name": "Fee Plans — Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.feePlan?._id) { pm.environment.set('feePlanId', res.data.feePlan._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libraryId\": \"{{libraryId}}\",\n  \"branchId\": \"{{branchId}}\",\n  \"name\": \"Monthly plan {{$timestamp}}\",\n  \"amount\": 1500,\n  \"durationDays\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/fee-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "fee-plans"]
+            },
+            "description": "Requires `feePlan.create`. **SUPER_ADMIN** must send `libraryId` matching the branch's library. Tenant roles omit `libraryId` (JWT scope is used)."
+          }
+        },
+        {
+          "name": "Invoices — List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/invoices?page=1&limit=20&sortBy=dueDate&sortOrder=asc&search=&hasOpenBalance=true&libraryId={{libraryId}}&branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "invoices"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "libraryId", "value": "{{libraryId}}", "description": "SUPER_ADMIN: scope to library." },
+                { "key": "branchId", "value": "{{branchId}}", "description": "SUPER_ADMIN: scope to branch." },
+                { "key": "search", "value": "", "description": "Invoice #, student name, phone, studentId code, seat number." },
+                { "key": "status", "value": "UNPAID", "disabled": true },
+                { "key": "dueAfter", "value": "", "disabled": true },
+                { "key": "dueBefore", "value": "", "disabled": true },
+                { "key": "hasOpenBalance", "value": "true", "disabled": true, "description": "Collectable-style filter." },
+                { "key": "overdueOnly", "value": "false", "disabled": true },
+                { "key": "invoiceId", "value": "{{invoiceId}}", "disabled": true },
+                { "key": "seatId", "value": "", "disabled": true },
+                { "key": "studentId", "value": "{{studentId}}", "disabled": true },
+                { "key": "sortBy", "value": "dueDate" },
+                { "key": "sortOrder", "value": "asc" }
+              ]
+            },
+            "description": "Requires `payment.read`. List items are enriched with `studentName`, `studentCode`, `studentPhone`, `seatNumber`, `branchName`, `feePlanName`, `invoiceId`, `lastPaymentId`, `hasActivePayments` when applicable. Use `libraryId`/`branchId` for SUPER_ADMIN tenant scope."
+          }
+        },
+        {
+          "name": "Invoices — Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.invoice?._id) { pm.environment.set('invoiceId', res.data.invoice._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libraryId\": \"{{libraryId}}\",\n  \"branchId\": \"{{branchId}}\",\n  \"studentId\": \"{{studentId}}\",\n  \"dueDate\": \"2026-12-31T00:00:00.000Z\",\n  \"amount\": 500,\n  \"status\": \"UNPAID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "invoices"]
+            },
+            "description": "Requires `payment.create`. **SUPER_ADMIN** must send `libraryId` matching the branch's library. Tenant roles omit `libraryId`. Optionally set `feePlanId` and omit `amount` when billing from a plan."
+          }
+        },
+        {
+          "name": "Invoices — Get by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/invoices/{{invoiceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "invoices", "{{invoiceId}}"]
+            },
+            "description": "Requires `payment.read`. Run **Invoices — Create** first or paste an `invoiceId`."
+          }
+        },
+        {
+          "name": "Collect Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.payment?._id) { pm.environment.set('paymentId', res.data.payment._id); }",
+                  "if (res?.data?.invoice?._id) { pm.environment.set('invoiceId', res.data.invoice._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": \"{{invoiceId}}\",\n  \"amount\": 100,\n  \"method\": \"CASH\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/collect",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "collect"]
+            },
+            "description": "Requires `payment.create`. Amount must not exceed due unless `allowOverpayment: true` and caller has `payment.update`."
+          }
+        },
+        {
+          "name": "Student Payment History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/students/{{studentId}}/history?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "students", "{{studentId}}", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Requires `payment.read`. Students may only call this for their own `studentId`."
+          }
+        },
+        {
+          "name": "Dues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/invoices/dues?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "invoices", "dues"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            },
+            "description": "Requires `payment.read`. Invoices with positive due in UNPAID / PARTIAL / OVERDUE."
+          }
+        },
+        {
+          "name": "Overdue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/invoices/overdue?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "invoices", "overdue"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            },
+            "description": "Requires `payment.read`. Promotes eligible rows to OVERDUE then lists past-due balances."
+          }
+        },
+        {
+          "name": "Receipt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/receipts/{{paymentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "receipts", "{{paymentId}}"]
+            },
+            "description": "Requires `payment.read`. Run **Collect Payment** first or paste a `paymentId`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seats",
+      "item": [
+        {
+          "name": "List seats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seats?page=1&limit=20&libraryId={{libraryId}}&branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seats"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            },
+            "description": "`seat.read` or `seat.occupancy.read`. SUPER_ADMIN filters by query; tenant roles use JWT scope."
+          }
+        },
+        {
+          "name": "Occupancy summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seats/occupancy/summary?libraryId={{libraryId}}&branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seats", "occupancy", "summary"],
+              "query": [
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create seat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.seat?._id) pm.environment.set('seatId', res.data.seat._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libraryId\": \"{{libraryId}}\",\n  \"branchId\": \"{{branchId}}\",\n  \"seatNumber\": \"A-01\",\n  \"floor\": \"1\",\n  \"zone\": \"North\",\n  \"seatType\": \"STANDARD\",\n  \"shiftType\": \"FULL_DAY\",\n  \"status\": \"AVAILABLE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/seats", "host": ["{{baseUrl}}"], "path": ["seats"] },
+            "description": "Requires `seat.create`."
+          }
+        },
+        {
+          "name": "Bulk create seats",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libraryId\": \"{{libraryId}}\",\n  \"branchId\": \"{{branchId}}\",\n  \"prefix\": \"B-\",\n  \"startNumber\": 1,\n  \"endNumber\": 5,\n  \"floor\": \"2\",\n  \"zone\": \"East\",\n  \"seatType\": \"STANDARD\",\n  \"shiftType\": \"FULL_DAY\",\n  \"padLength\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/seats/bulk", "host": ["{{baseUrl}}"], "path": ["seats", "bulk"] },
+            "description": "Requires `seat.bulkCreate`."
+          }
+        },
+        {
+          "name": "Get seat",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/seats/{{seatId}}", "host": ["{{baseUrl}}"], "path": ["seats", "{{seatId}}"] }
+          }
+        },
+        {
+          "name": "Assign seat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/seats/{{seatId}}/assign", "host": ["{{baseUrl}}"], "path": ["seats", "{{seatId}}", "assign"] },
+            "description": "Requires `seat.assign`. Student must be in the same branch."
+          }
+        },
+        {
+          "name": "Unassign seat",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/seats/{{seatId}}/unassign", "host": ["{{baseUrl}}"], "path": ["seats", "{{seatId}}", "unassign"] },
+            "description": "Requires `seat.unassign`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Check-in student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res?.data?.attendance?._id) pm.environment.set('attendanceId', res.data.attendance._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"method\": \"MANUAL\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/attendance/check-in", "host": ["{{baseUrl}}"], "path": ["attendance", "check-in"] }
+          }
+        },
+        {
+          "name": "Check-out student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/attendance/check-out", "host": ["{{baseUrl}}"], "path": ["attendance", "check-out"] }
+          }
+        },
+        {
+          "name": "Manual entry",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"method\": \"MANUAL\",\n  \"status\": \"PRESENT\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/attendance/manual", "host": ["{{baseUrl}}"], "path": ["attendance", "manual"] }
+          }
+        },
+        {
+          "name": "Daily attendance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/daily?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "daily"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Student history",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/students/{{studentId}}/history?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "students", "{{studentId}}", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Active check-ins",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/active?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "active"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Attendance summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Update attendance",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Manual correction\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{attendanceId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Requires `user.read` or `staff.read`. SUPER_ADMIN may filter by `libraryId` / `branchId`."
+          }
+        },
+        {
+          "name": "Create user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "if (res?.data?.user?._id) { pm.environment.set('managedUserId', res.data.user._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Staff User\",\n  \"email\": \"staff+{{$timestamp}}@example.com\",\n  \"phone\": \"+91 9876543210\",\n  \"password\": \"TempPass1\",\n  \"role\": \"RECEPTIONIST\",\n  \"libraryId\": \"{{libraryId}}\",\n  \"branchId\": \"{{branchId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Requires `user.create` (SUPER_ADMIN) or `staff.create` (LIBRARY_OWNER). Staff roles require `libraryId` and `branchId`; the branch must belong to that library. `LIBRARY_OWNER` requires `libraryId` only. `SUPER_ADMIN` role must not send tenant fields. Student logins are not created here (Students module)."
+          }
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{managedUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{managedUserId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Staff User Updated\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{managedUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{managedUserId}}"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate user",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{managedUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{managedUserId}}"]
+            },
+            "description": "Soft-deactivates the account (`isActive: false`)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "unreadOnly", "value": "true", "disabled": true },
+                { "key": "type", "value": "ANNOUNCEMENT", "disabled": true }
+              ]
+            },
+            "description": "Requires `notification.read`."
+          }
+        },
+        {
+          "name": "Unread count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "Mark notification read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "{{notificationId}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark all read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        },
+        {
+          "name": "List notification recipients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/recipients?page=1&limit=20&q=&role=&branchId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "recipients"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "q", "value": "", "description": "Search name, email, phone, role label" },
+                { "key": "role", "value": "", "disabled": true, "description": "e.g. STUDENT" },
+                { "key": "branchId", "value": "{{branchId}}", "disabled": true },
+                { "key": "libraryId", "value": "{{libraryId}}", "disabled": true, "description": "Required for SUPER_ADMIN" }
+              ]
+            },
+            "description": "Requires `notification.send`. Selector-friendly user rows for the send UI."
+          }
+        },
+        {
+          "name": "Send notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test\",\n  \"message\": \"Hello from Postman\",\n  \"type\": \"ANNOUNCEMENT\",\n  \"channel\": \"IN_APP\",\n  \"includeSelf\": false,\n  \"target\": { \"mode\": \"USER\", \"userId\": \"{{managedUserId}}\" }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "send"]
+            },
+            "description": "Requires `notification.send`. Optional `includeSelf` (default false) excludes the sender from LIBRARY/ROLE/BRANCH/PLATFORM/STUDENTS_WITH_DUES. SUPER_ADMIN must include `libraryId` in the JSON body when not using PLATFORM."
+          }
+        },
+        {
+          "name": "List templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/templates?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "templates"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notification logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/logs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Requires `notification.manage`."
+          }
+        },
+        {
+          "name": "Get notification log detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/logs/{{notificationLogId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "logs", "{{notificationLogId}}"]
+            },
+            "description": "Requires `notification.manage`. Set `notificationLogId` from a list-logs response `_id`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Platform (SUPER_ADMIN)",
+      "item": [
+        {
+          "name": "Platform dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/platform/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "dashboard"]
+            },
+            "description": "Requires SUPER_ADMIN session."
+          }
+        },
+        {
+          "name": "Platform tenants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/platform/tenants?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "tenants"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "status", "value": "SUSPENDED", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend tenant",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Billing dispute — contact finance.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/tenants/{{libraryId}}/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "tenants", "{{libraryId}}", "suspend"]
+            }
+          }
+        },
+        {
+          "name": "Platform audit logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/platform/audit-logs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Global announcement",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Maintenance\",\n  \"message\": \"Brief downtime Sunday 02:00 UTC.\",\n  \"type\": \"ANNOUNCEMENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/announcements",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "announcements"]
+            }
+          }
+        },
+        {
+          "name": "Platform demo requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/platform/demo-requests?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "demo-requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "NEW", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Platform settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/platform/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Patch platform settings",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supportEmail\": \"support@example.com\",\n  \"salesEmail\": \"sales@example.com\",\n  \"demoRequestNotifyEmail\": \"leads@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Patch demo request",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONTACTED\",\n  \"adminNote\": \"Called lead and scheduled follow-up.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/platform/demo-requests/{{demoRequestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform", "demo-requests", "{{demoRequestId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Demo requests (public)",
+      "item": [
+        {
+          "name": "Submit demo request",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rohit Kumar\",\n  \"email\": \"owner@example.com\",\n  \"phone\": \"+91 98765 43210\",\n  \"libraryName\": \"City Study Hub\",\n  \"city\": \"Jaipur\",\n  \"branchCount\": 2,\n  \"studentCount\": 250,\n  \"currentSystem\": \"Excel\",\n  \"interestedFeatures\": [\"ATTENDANCE\", \"PAYMENTS\"],\n  \"notes\": \"Need onboarding next week\",\n  \"website\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/demo-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["demo-requests"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative tests",
+      "item": [
+        {
+          "name": "Users - no token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Public registration was removed; user listing requires authentication."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - invalid credentials",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nope@example.com\",\n  \"password\": \"WrongPass1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me - no token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Libraries - no token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libraries",
+              "host": ["{{baseUrl}}"],
+              "path": ["libraries"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Students - no token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

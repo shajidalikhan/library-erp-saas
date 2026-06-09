@@ -1,0 +1,334 @@
+/**
+ * Centralized permission catalog.
+ *
+ * Naming convention: `<resource>.<action>` (lowercase, dot-separated).
+ * - Use this catalog whenever you guard a route, never inline strings in routes.
+ * - Add new permissions here first; then map them to roles below.
+ *
+ * Why centralized?
+ *  - Single source of truth for the seeder.
+ *  - Allows compile-time checking via the `PermissionName` union.
+ */
+
+export const PERMISSIONS = {
+  // -------- USER / AUTH --------
+  USER_READ: 'user.read',
+  USER_CREATE: 'user.create',
+  USER_UPDATE: 'user.update',
+  USER_DELETE: 'user.delete',
+  USER_INVITE: 'user.invite',
+
+  /** Staff directory under a tenant (library owner / delegated staff management). */
+  STAFF_CREATE: 'staff.create',
+  STAFF_READ: 'staff.read',
+  STAFF_UPDATE: 'staff.update',
+  STAFF_DELETE: 'staff.delete',
+
+  // -------- ROLE / RBAC --------
+  ROLE_READ: 'role.read',
+  ROLE_MANAGE: 'role.manage',
+
+  // -------- LIBRARY (TENANT) --------
+  LIBRARY_READ: 'library.read',
+  LIBRARY_CREATE: 'library.create',
+  LIBRARY_UPDATE: 'library.update',
+  LIBRARY_DELETE: 'library.delete',
+
+  // -------- BRANCH --------
+  BRANCH_READ: 'branch.read',
+  BRANCH_CREATE: 'branch.create',
+  BRANCH_UPDATE: 'branch.update',
+  BRANCH_DELETE: 'branch.delete',
+
+  // -------- STUDENT --------
+  STUDENT_READ: 'student.read',
+  /** Gate / security desk — name, photo, branch, status only (no PII bundle). */
+  STUDENT_READ_BASIC: 'student.read.basic',
+  STUDENT_CREATE: 'student.create',
+  STUDENT_UPDATE: 'student.update',
+  STUDENT_DELETE: 'student.delete',
+  STUDENT_TRANSFER: 'student.transfer',
+  STUDENT_ASSIGN_SEAT: 'student.assignSeat',
+
+  // -------- SEAT --------
+  SEAT_READ: 'seat.read',
+  /** Desk / security: occupancy dashboards without full seat admin fields. */
+  SEAT_OCCUPANCY_READ: 'seat.occupancy.read',
+  SEAT_CREATE: 'seat.create',
+  SEAT_UPDATE: 'seat.update',
+  SEAT_DELETE: 'seat.delete',
+  SEAT_ASSIGN: 'seat.assign',
+  SEAT_UNASSIGN: 'seat.unassign',
+  SEAT_BULK_CREATE: 'seat.bulkCreate',
+
+  // -------- SHIFT --------
+  SHIFT_CREATE: 'shift.create',
+  SHIFT_READ: 'shift.read',
+  SHIFT_UPDATE: 'shift.update',
+  SHIFT_DELETE: 'shift.delete',
+
+  // -------- MEMBERSHIP --------
+  MEMBERSHIP_CREATE: 'membership.create',
+  MEMBERSHIP_READ: 'membership.read',
+  MEMBERSHIP_UPDATE: 'membership.update',
+  MEMBERSHIP_RENEW: 'membership.renew',
+
+  // -------- STUDENT FIELDS / ID CARD --------
+  STUDENT_FIELD_MANAGE: 'studentField.manage',
+  ID_CARD_GENERATE: 'idCard.generate',
+
+  // -------- ATTENDANCE --------
+  ATTENDANCE_READ: 'attendance.read',
+  ATTENDANCE_CREATE: 'attendance.create',
+  ATTENDANCE_UPDATE: 'attendance.update',
+  ATTENDANCE_CHECK_IN: 'attendance.checkIn',
+  ATTENDANCE_CHECK_OUT: 'attendance.checkOut',
+  ATTENDANCE_SUMMARY: 'attendance.summary',
+
+  // -------- PAYMENT --------
+  PAYMENT_READ: 'payment.read',
+  PAYMENT_CREATE: 'payment.create',
+  PAYMENT_UPDATE: 'payment.update',
+  PAYMENT_DELETE: 'payment.delete',
+  PAYMENT_REFUND: 'payment.refund',
+  PAYMENT_SUMMARY: 'payment.summary',
+
+  // -------- FEE PLAN --------
+  FEE_PLAN_CREATE: 'feePlan.create',
+  FEE_PLAN_READ: 'feePlan.read',
+  FEE_PLAN_UPDATE: 'feePlan.update',
+  FEE_PLAN_DELETE: 'feePlan.delete',
+
+  // -------- PUBLIC BOOKING --------
+  BOOKING_READ: 'booking.read',
+  BOOKING_CREATE: 'booking.create',
+  BOOKING_UPDATE: 'booking.update',
+  BOOKING_MANAGE: 'booking.manage',
+  BOOKING_CONVERT: 'booking.convert',
+  PUBLIC_PAGE_READ: 'publicPage.read',
+  PUBLIC_PAGE_MANAGE: 'publicPage.manage',
+
+  // -------- REPORT / ANALYTICS --------
+  REPORT_VIEW: 'report.view',
+  ANALYTICS_VIEW: 'analytics.view',
+
+  // -------- NOTIFICATION --------
+  NOTIFICATION_READ: 'notification.read',
+  NOTIFICATION_SEND: 'notification.send',
+  NOTIFICATION_MANAGE: 'notification.manage',
+  NOTIFICATION_TEMPLATE_MANAGE: 'notification.template.manage',
+
+  // -------- PLATFORM (SaaS control plane) --------
+  /** Full platform admin UI + tenant lifecycle. */
+  PLATFORM_MANAGE: 'platform.manage',
+  /** View immutable platform audit trail. */
+  AUDIT_READ: 'audit.read',
+  /** Manage catalog subscription plans (limits, pricing). */
+  SUBSCRIPTION_MANAGE: 'subscription.manage',
+  /** Reserved for future impersonation flows (token issuance, session elevation). */
+  IMPERSONATION_MANAGE: 'impersonation.manage',
+} as const;
+
+export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export const ALL_PERMISSIONS: PermissionName[] = Object.values(PERMISSIONS);
+
+const PERMISSION_BY_LOWER = new Map(
+  ALL_PERMISSIONS.map((name) => [name.toLowerCase(), name]),
+);
+
+/** Map DB-stored permission names (lowercased by Mongoose) back to catalog keys. */
+export function canonicalPermissionName(stored: string): PermissionName {
+  return (PERMISSION_BY_LOWER.get(stored.toLowerCase()) ?? stored) as PermissionName;
+}
+
+/**
+ * Default permission set assigned to each role at seeding time.
+ *
+ * SUPER_ADMIN intentionally has every permission; the auth middleware
+ * also short-circuits permission checks for SUPER_ADMIN.
+ */
+import { ROLES, type RoleName } from './roles.constants';
+
+export const ROLE_PERMISSIONS: Record<RoleName, PermissionName[]> = {
+  [ROLES.SUPER_ADMIN]: ALL_PERMISSIONS,
+
+  [ROLES.LIBRARY_OWNER]: [
+    PERMISSIONS.ROLE_READ,
+    PERMISSIONS.STAFF_CREATE,
+    PERMISSIONS.STAFF_READ,
+    PERMISSIONS.STAFF_UPDATE,
+    PERMISSIONS.STAFF_DELETE,
+    PERMISSIONS.LIBRARY_READ,
+    PERMISSIONS.LIBRARY_UPDATE,
+    PERMISSIONS.BRANCH_READ,
+    PERMISSIONS.BRANCH_CREATE,
+    PERMISSIONS.BRANCH_UPDATE,
+    PERMISSIONS.BRANCH_DELETE,
+    PERMISSIONS.STUDENT_READ,
+    PERMISSIONS.STUDENT_CREATE,
+    PERMISSIONS.STUDENT_UPDATE,
+    PERMISSIONS.STUDENT_DELETE,
+    PERMISSIONS.STUDENT_TRANSFER,
+    PERMISSIONS.STUDENT_ASSIGN_SEAT,
+    PERMISSIONS.SEAT_READ,
+    PERMISSIONS.SEAT_OCCUPANCY_READ,
+    PERMISSIONS.SEAT_CREATE,
+    PERMISSIONS.SEAT_UPDATE,
+    PERMISSIONS.SEAT_DELETE,
+    PERMISSIONS.SEAT_ASSIGN,
+    PERMISSIONS.SEAT_UNASSIGN,
+    PERMISSIONS.SEAT_BULK_CREATE,
+    PERMISSIONS.SHIFT_CREATE,
+    PERMISSIONS.SHIFT_READ,
+    PERMISSIONS.SHIFT_UPDATE,
+    PERMISSIONS.SHIFT_DELETE,
+    PERMISSIONS.MEMBERSHIP_CREATE,
+    PERMISSIONS.MEMBERSHIP_READ,
+    PERMISSIONS.MEMBERSHIP_UPDATE,
+    PERMISSIONS.MEMBERSHIP_RENEW,
+    PERMISSIONS.STUDENT_FIELD_MANAGE,
+    PERMISSIONS.ID_CARD_GENERATE,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_CREATE,
+    PERMISSIONS.ATTENDANCE_UPDATE,
+    PERMISSIONS.ATTENDANCE_CHECK_IN,
+    PERMISSIONS.ATTENDANCE_CHECK_OUT,
+    PERMISSIONS.ATTENDANCE_SUMMARY,
+    PERMISSIONS.PAYMENT_READ,
+    PERMISSIONS.PAYMENT_CREATE,
+    PERMISSIONS.PAYMENT_UPDATE,
+    PERMISSIONS.PAYMENT_DELETE,
+    PERMISSIONS.PAYMENT_REFUND,
+    PERMISSIONS.PAYMENT_SUMMARY,
+    PERMISSIONS.FEE_PLAN_CREATE,
+    PERMISSIONS.FEE_PLAN_READ,
+    PERMISSIONS.FEE_PLAN_UPDATE,
+    PERMISSIONS.FEE_PLAN_DELETE,
+    PERMISSIONS.BOOKING_READ,
+    PERMISSIONS.BOOKING_CREATE,
+    PERMISSIONS.BOOKING_UPDATE,
+    PERMISSIONS.BOOKING_MANAGE,
+    PERMISSIONS.BOOKING_CONVERT,
+    PERMISSIONS.PUBLIC_PAGE_READ,
+    PERMISSIONS.PUBLIC_PAGE_MANAGE,
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_SEND,
+    PERMISSIONS.NOTIFICATION_MANAGE,
+    PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE,
+  ],
+
+  [ROLES.MANAGER]: [
+    PERMISSIONS.LIBRARY_READ,
+    PERMISSIONS.BRANCH_READ,
+    PERMISSIONS.BRANCH_UPDATE,
+    PERMISSIONS.STUDENT_READ,
+    PERMISSIONS.STUDENT_CREATE,
+    PERMISSIONS.STUDENT_UPDATE,
+    PERMISSIONS.STUDENT_TRANSFER,
+    PERMISSIONS.STUDENT_ASSIGN_SEAT,
+    PERMISSIONS.SEAT_READ,
+    PERMISSIONS.SEAT_OCCUPANCY_READ,
+    PERMISSIONS.SEAT_CREATE,
+    PERMISSIONS.SEAT_UPDATE,
+    PERMISSIONS.SEAT_DELETE,
+    PERMISSIONS.SEAT_ASSIGN,
+    PERMISSIONS.SEAT_UNASSIGN,
+    PERMISSIONS.SEAT_BULK_CREATE,
+    PERMISSIONS.SHIFT_CREATE,
+    PERMISSIONS.SHIFT_READ,
+    PERMISSIONS.SHIFT_UPDATE,
+    PERMISSIONS.SHIFT_DELETE,
+    PERMISSIONS.MEMBERSHIP_CREATE,
+    PERMISSIONS.MEMBERSHIP_READ,
+    PERMISSIONS.MEMBERSHIP_UPDATE,
+    PERMISSIONS.MEMBERSHIP_RENEW,
+    PERMISSIONS.STUDENT_FIELD_MANAGE,
+    PERMISSIONS.ID_CARD_GENERATE,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_CREATE,
+    PERMISSIONS.ATTENDANCE_UPDATE,
+    PERMISSIONS.ATTENDANCE_CHECK_IN,
+    PERMISSIONS.ATTENDANCE_CHECK_OUT,
+    PERMISSIONS.ATTENDANCE_SUMMARY,
+    PERMISSIONS.PAYMENT_READ,
+    PERMISSIONS.PAYMENT_CREATE,
+    PERMISSIONS.PAYMENT_UPDATE,
+    PERMISSIONS.PAYMENT_REFUND,
+    PERMISSIONS.PAYMENT_SUMMARY,
+    PERMISSIONS.FEE_PLAN_READ,
+    PERMISSIONS.BOOKING_READ,
+    PERMISSIONS.BOOKING_UPDATE,
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_SEND,
+    PERMISSIONS.NOTIFICATION_MANAGE,
+  ],
+
+  [ROLES.RECEPTIONIST]: [
+    PERMISSIONS.BRANCH_READ,
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.STUDENT_READ,
+    PERMISSIONS.STUDENT_CREATE,
+    PERMISSIONS.STUDENT_UPDATE,
+    PERMISSIONS.STUDENT_ASSIGN_SEAT,
+    PERMISSIONS.SEAT_READ,
+    PERMISSIONS.SEAT_ASSIGN,
+    PERMISSIONS.SEAT_UNASSIGN,
+    PERMISSIONS.SHIFT_READ,
+    PERMISSIONS.MEMBERSHIP_CREATE,
+    PERMISSIONS.MEMBERSHIP_READ,
+    PERMISSIONS.MEMBERSHIP_RENEW,
+    PERMISSIONS.ID_CARD_GENERATE,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_CREATE,
+    PERMISSIONS.ATTENDANCE_CHECK_IN,
+    PERMISSIONS.ATTENDANCE_CHECK_OUT,
+    PERMISSIONS.PAYMENT_READ,
+    PERMISSIONS.PAYMENT_CREATE,
+    PERMISSIONS.FEE_PLAN_READ,
+    PERMISSIONS.BOOKING_READ,
+    PERMISSIONS.BOOKING_UPDATE,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_SEND,
+  ],
+
+  [ROLES.ACCOUNTANT]: [
+    PERMISSIONS.BRANCH_READ,
+    PERMISSIONS.STUDENT_READ,
+    PERMISSIONS.SEAT_READ,
+    PERMISSIONS.MEMBERSHIP_READ,
+    PERMISSIONS.MEMBERSHIP_RENEW,
+    PERMISSIONS.PAYMENT_READ,
+    PERMISSIONS.PAYMENT_CREATE,
+    PERMISSIONS.PAYMENT_UPDATE,
+    PERMISSIONS.PAYMENT_DELETE,
+    PERMISSIONS.PAYMENT_REFUND,
+    PERMISSIONS.PAYMENT_SUMMARY,
+    PERMISSIONS.FEE_PLAN_READ,
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_SEND,
+  ],
+
+  [ROLES.SECURITY]: [
+    PERMISSIONS.STUDENT_READ_BASIC,
+    PERMISSIONS.SEAT_OCCUPANCY_READ,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_CREATE,
+    PERMISSIONS.ATTENDANCE_CHECK_IN,
+    PERMISSIONS.ATTENDANCE_CHECK_OUT,
+  ],
+
+  [ROLES.STUDENT]: [
+    PERMISSIONS.SEAT_READ,
+    PERMISSIONS.MEMBERSHIP_READ,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.PAYMENT_READ,
+    PERMISSIONS.NOTIFICATION_READ,
+  ],
+};
